@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     'rest_framework',
+    'django_filters',
     'rest_framework.authtoken',
     'corsheaders',
     'drf_spectacular',
@@ -31,8 +32,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
     'dj_rest_auth.registration',
-
+    'storages',
     'apps.users',
+    'apps.shots'
 ]
 
 SITE_ID = 1
@@ -119,5 +121,26 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 STATIC_URL = 'static/'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AWS_ACCESS_KEY_ID = config('access_key')
+AWS_SECRET_ACCESS_KEY = config('secret_access_key')
+AWS_STORAGE_BUCKET_NAME = config('aws_storage_bucket_name')
+
+AWS_S3_ENDPOINT_URL = 'https://e667c17f477f1359d2621b0b0c428e45.r2.cloudflarestorage.com'
+
+AWS_S3_REGION_NAME = 'auto'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_FILE_OVERWRITE = False
+AWS_S3_ADDRESSING_STYLE = 'path'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
