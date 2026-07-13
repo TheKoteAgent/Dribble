@@ -74,6 +74,36 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',      # 100 запитів на день для анонімів
+        'user': '1000/hour',    # 1000 запитів на годину для авторизованих
+        'auth': '5/minute',     # Спеціальний ліміт для авторизації
+    }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": config("REDIS_URL", default="redis://127.0.0.1:6379/1"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+# Час життя кешу за замовчуванням (у секундах)
+CACHE_TTL = 60 * 15  # 15 хвилин
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Voxel API',
+    'DESCRIPTION': 'API для клону Dribbble (Voxel) з підтримкою автентифікації, завантаження Shots та соціальних функцій',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 SIMPLE_JWT = {

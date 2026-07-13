@@ -67,3 +67,42 @@ class Shot(models.Model):
             self.preview.save(preview_filename, ContentFile(temp_thumb.read()), save=False)
         except Exception as e:
             print(f"Помилка створення прев'ю: {e}")
+
+
+class Like(models.Model):
+    """Лайк до Shot. Один юзер — один лайк на один Shot."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='likes')
+    shot = models.ForeignKey('Shot', on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'shot')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.shot.title}"
+
+
+class Save(models.Model):
+    """Збережений Shot. Один юзер — один Save на один Shot."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='saves')
+    shot = models.ForeignKey('Shot', on_delete=models.CASCADE, related_name='saves')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'shot')
+        ordering = ['-created_at']
+
+
+class Comment(models.Model):
+    """Коментар до Shot."""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+    shot = models.ForeignKey('Shot', on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.shot.title}"

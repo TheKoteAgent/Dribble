@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Shot, Tag
+from .models import Shot, Tag, Comment
 from apps.users.serializers import UserProfileSerializer
 
 User = get_user_model()
@@ -22,11 +22,26 @@ class TagRelatedField(serializers.RelatedField):
         return tag
 
 
+class CommentAuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'avatar')
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = CommentAuthorSerializer(source='user', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'author', 'text', 'created_at')
+        read_only_fields = ('id', 'author', 'created_at')
+
+
 class ShotSerializer(serializers.ModelSerializer):
     author = ShotAuthorSerializer(read_only=True)
     tags = TagRelatedField(many=True, queryset=Tag.objects.all(), required=False)
 
-    # Поля соціальної взаємодії (будуть реалізовані у Фазі 3)
+    # Поля соціальної взаємодії
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
@@ -42,15 +57,21 @@ class ShotSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'preview', 'author', 'created_at')
 
     def get_likes_count(self, obj):
-        return 0
+        return obj.likes.count()
 
     def get_comments_count(self, obj):
-        return 0
+        return obj.comments.count()
 
     def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
         return False
 
     def get_is_saved(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.saves.filter(user=request.user).exists()
         return False
 
     def to_internal_value(self, data):

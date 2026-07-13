@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -21,3 +22,26 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.email})"
+
+
+class Follow(models.Model):
+    """Підписка одного юзера на іншого."""
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='following_set'  # юзери, на яких підписаний
+    )
+    followed = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='followers_set'  # юзери, які підписані на цього
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if self.follower == self.followed:
+            raise ValidationError("Не можна підписатися на самого себе.")

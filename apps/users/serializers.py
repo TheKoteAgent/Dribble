@@ -29,21 +29,35 @@ class UserProfileSerializer(serializers.ModelSerializer):
     shots_count = serializers.SerializerMethodField()
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'username', 'avatar', 'bio',
             'website', 'twitter', 'instagram', 'linkedin',
-            'shots_count', 'followers_count', 'following_count'
+            'shots_count', 'followers_count', 'following_count', 'is_following'
         )
-        read_only_fields = ('id', 'email', 'shots_count', 'followers_count', 'following_count')
+        read_only_fields = ('id', 'email', 'shots_count', 'followers_count', 'following_count', 'is_following')
 
     def get_shots_count(self, obj):
-        return getattr(obj, 'shots_count_cached', 0)
+        return obj.shots.count()
 
     def get_followers_count(self, obj):
-        return getattr(obj, 'followers_count_cached', 0)
+        return obj.followers_set.count()
 
     def get_following_count(self, obj):
-        return getattr(obj, 'following_count_cached', 0)
+        return obj.following_set.count()
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.followers_set.filter(follower=request.user).exists()
+        return False
+
+
+class FollowUserSerializer(serializers.ModelSerializer):
+    """Мінімальний профіль для списків followers/following."""
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'avatar', 'bio')
