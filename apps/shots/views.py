@@ -2,7 +2,10 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -110,3 +113,34 @@ class ShotViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Можна видаляти тільки свої коментарі.'}, status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SearchView(APIView):
+    """GET /api/search/?q= — глобальний пошук по shots та користувачах"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from apps.users.serializers import FollowUserSerializer
+
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({'shots': [], 'users': []})
+
+        shots = (
+            Shot.objects.filter(
+                Q(title__icontains=query) |
+                Q(description__icontains=query) |
+                Q(tags__name__icontains=query)
+            )
+            .select_related('author')
+            .prefetch_related('tags', 'likes', 'saves', 'comments')
+            .distinct()[:20]
+        )
+        users = get_user_model().objects.filter(
+            Q(username__icontains=query) | Q(bio__icontains=query)
+        )[:20]
+
+        return Response({
+            'shots': ShotSerializer(shots, many=True, context={'request': request}).data,
+            'users': FollowUserSerializer(users, many=True).data,
+        })

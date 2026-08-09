@@ -121,8 +121,19 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email', 'username']
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+# Адреса фронтенду — використовується в листі відновлення пароля
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
+
+# У dev-режимі листи виводяться в консоль; для продакшену задати SMTP через .env
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@voxel.local')
+
+REST_AUTH = {
+    'PASSWORD_RESET_SERIALIZER': 'apps.users.serializers.CustomPasswordResetSerializer',
+}
 
 TEMPLATES = [
     {
@@ -162,7 +173,6 @@ AWS_S3_REGION_NAME = 'auto'
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False
 AWS_S3_ADDRESSING_STYLE = 'path'
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 STORAGES = {
     "default": {
@@ -172,5 +182,5 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

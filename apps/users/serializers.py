@@ -1,8 +1,21 @@
 from rest_framework import serializers
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from allauth.account.utils import user_pk_to_url_str
+from dj_rest_auth.serializers import PasswordResetSerializer
 
 User = get_user_model()
+
+
+def password_reset_url_generator(request, user, temp_key):
+    """Посилання веде на фронтенд: /forgot-password/confirm?uid=...&token=..."""
+    return f"{settings.FRONTEND_URL}/forgot-password/confirm?uid={user_pk_to_url_str(user)}&token={temp_key}"
+
+
+class CustomPasswordResetSerializer(PasswordResetSerializer):
+    def get_email_options(self):
+        return {'url_generator': password_reset_url_generator}
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

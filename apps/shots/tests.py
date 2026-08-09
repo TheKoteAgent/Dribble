@@ -31,7 +31,11 @@ def auth_client(api_client, auth_user):
 
 @pytest.fixture
 def sample_image():
-    return SimpleUploadedFile("test.png", b"file_content", content_type="image/png")
+    from io import BytesIO
+    from PIL import Image
+    buffer = BytesIO()
+    Image.new('RGB', (1, 1)).save(buffer, format='PNG')
+    return SimpleUploadedFile("test.png", buffer.getvalue(), content_type="image/png")
 
 
 @pytest.mark.django_db
